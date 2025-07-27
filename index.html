@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TouchMemory Web</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Main Menu -->
+  <div class="main-menu">
+    <button id="button_quiz">Start Quiz</button>
+    <button id="button_remove">Questions</button>
+  </div>
+
+  <!-- Category Select Screen -->
+  <div class="category-screen hidden">
+    <div id="all_checkbox_container"></div>
+    <div id="category_checkbox_container"></div>
+    <div class="category-buttons">
+      <button id="button_start_quiz">Start Quiz</button>
+      <button id="button_guest_mode">Guest Mode</button>
+      <button id="button_back_to_main">Back</button>
+    </div>
+  </div>
+
+  <!-- Questions Screen -->
+  <div class="questions-screen hidden">
+    <button id="button_add_question">Add Question</button>
+    <input type="text" id="search_input" placeholder="Search questions by first letters" />
+    <div id="question_list"></div>
+    <button id="button_back_from_questions">Back to Main Menu</button>
+  </div>
+
+  <!-- Add Question Screen -->
+  <div class="add-question-screen hidden">
+    <input type="file" id="question_image_input" accept="image/*" />
+    <img id="question_image_preview" src="" alt="Selected Image" style="max-width:100%;height:auto;display:block;margin-top:10px;" />
+    <p id="image_instruction">Tap the image above to select one</p>
+
+    <input type="text" id="input_correct_answer" placeholder="Correct Answer" />
+
+    <div id="category_container"></div>
+
+    <button id="button_save">Save Question</button>
+    <button id="button_manage_categories">Manage Categories</button>
+    <button id="button_back_from_add">Back</button>
+  </div>
+
+  <!-- Manage Categories Screen -->
+  <div class="manage-categories-screen hidden">
+    <h2>Manage Categories</h2>
+    <div id="category_list"></div>
+    <input type="text" id="input_new_category" placeholder="Add new category" />
+    <button id="button_add_category">Add Category</button>
+    <button id="button_back_from_manage">Back</button>
+  </div>
+
+  <!-- Edit Question Screen -->
+  <div class="edit-question-screen hidden">
+    <input type="file" id="edit_question_image_input" accept="image/*" />
+    <img id="edit_question_image_preview" src="" alt="Edit Image Preview" />
+    <input type="text" id="edit_correct_answer" placeholder="Correct Answer" />
+    <div id="edit_category_container"></div>
+    <button id="button_update_question">Update</button>
+    <button id="button_delete_question">Delete</button>
+    <button id="button_back_from_edit">Back</button>
+  </div>
+
+  <!-- Quiz Screen -->
+  <div class="quiz-screen hidden">
+    <img id="quiz_image" src="" alt="Quiz Image" />
+    <div id="quiz_buttons"></div>
+    <button id="button_back_from_quiz">Exit Quiz</button>
+  </div>
+
+  <!-- Template for Question Item -->
+  <template id="question_item_template">
+    <div class="question-item">
+      <img class="thumbnail" />
+      <span class="question-answer"></span>
+      <div class="question-categories"></div>
+      <button class="edit-button">Edit</button>
+      <button class="delete-button">Delete</button>
+    </div>
+  </template>
+
+  <script src="main.js"></script>
+</body>
+</html>
