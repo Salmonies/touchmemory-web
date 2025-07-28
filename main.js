@@ -1,6 +1,14 @@
 import defaultQuestions from './default-questions.js';
-let questions = JSON.parse(localStorage.getItem('questions') || 'null');
-if (!questions || !Array.isArray(questions)) {
+
+let questions = [];
+try {
+  const stored = localStorage.getItem('questions');
+  if (stored && Array.isArray(JSON.parse(stored))) {
+    questions = JSON.parse(stored);
+  } else {
+    throw new Error();
+  }
+} catch {
   questions = defaultQuestions;
   localStorage.setItem('questions', JSON.stringify(questions));
 }
