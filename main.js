@@ -1,3 +1,4 @@
+import defaultQuestions from './default-questions.js';
 // ✅ FULL main.js (updated)
 // Load default questions on first launch
 if (!localStorage.getItem('initialized')) {
