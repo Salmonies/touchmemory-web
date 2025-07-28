@@ -1,19 +1,23 @@
-// ✅ FULL main.js (updated)
-// Load default questions on first launch
-//if (!localStorage.getItem('initialized')) {
- // const script = document.createElement('script');
-//  script.src = 'default-questions.js';
-//  script.onload = () => {
- //   if (typeof defaultQuestions !== 'undefined') {
- //     localStorage.setItem('questions', JSON.stringify(defaultQuestions));
-   //   localStorage.setItem('initialized', 'true');
-   // }
-//  };
- // document.head.appendChild(script);
-//}
+let db;
 
-// ✅ FULL main.js (updated)
-// Screen elements
+const openRequest = indexedDB.open("TouchMemoryDB", 1);
+
+openRequest.onupgradeneeded = function (event) {
+  db = event.target.result;
+  if (!db.objectStoreNames.contains("questions")) {
+    db.createObjectStore("questions", { keyPath: "id", autoIncrement: true });
+  }
+};
+
+openRequest.onsuccess = function (event) {
+  db = event.target.result;
+  console.log("✅ IndexedDB loaded");
+};
+
+openRequest.onerror = function () {
+  console.error("❌ Failed to open IndexedDB");
+};
+
 
 
 // Screen elements
