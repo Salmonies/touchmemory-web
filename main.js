@@ -1,4 +1,20 @@
 // ✅ FULL main.js (updated)
+// Load default questions on first launch
+if (!localStorage.getItem('initialized')) {
+  const script = document.createElement('script');
+  script.src = 'default-questions.js';
+  script.onload = () => {
+    if (typeof defaultQuestions !== 'undefined') {
+      localStorage.setItem('questions', JSON.stringify(defaultQuestions));
+      localStorage.setItem('initialized', 'true');
+    }
+  };
+  document.head.appendChild(script);
+}
+
+// ✅ FULL main.js (updated)
+// Screen elements
+
 
 // Screen elements
 const mainMenu = document.querySelector('.main-menu');
@@ -139,101 +155,109 @@ window.masteredPool = masteredPool;
   quizScreen.classList.remove('hidden');
   showNextQuiz();
 
-
+}
 function showNextQuiz() {
- // <--line143--> Select next question from priority/mastered pools
-if (priorityPool.length === 0 && masteredPool.length === 0) {
-  showToast('No questions remaining');
-  return;
-}
+  if (priorityPool.length === 0 && masteredPool.length === 0) {
+    showToast('No questions remaining');
+    return;
+  }
 
-let sourcePool;
-if (priorityPool.length === 0) {
-  sourcePool = masteredPool;
-} else if (masteredPool.length === 0) {
-  sourcePool = priorityPool;
-} else {
-  sourcePool = Math.random() < 0.7 ? priorityPool : masteredPool;
-}
+  let sourcePool;
+  if (priorityPool.length === 0) {
+    sourcePool = masteredPool;
+  } else if (masteredPool.length === 0) {
+    sourcePool = priorityPool;
+  } else {
+    sourcePool = Math.random() < 0.7 ? priorityPool : masteredPool;
+  }
 
-let question;
-let attempts = 0;
-do {
-  const index = Math.floor(Math.random() * sourcePool.length);
-  question = sourcePool[index];
-  attempts++;
-} while (
-  recentQuestions.includes(question.correctAnswer + question.imageUri) &&
-  attempts < 20
-);
-const key = question.correctAnswer + question.imageUri;
-recentQuestions.push(key);
-if (recentQuestions.length > 3) recentQuestions.shift();
-
+  let question;
+  let attempts = 0;
+  do {
+    const index = Math.floor(Math.random() * sourcePool.length);
+    question = sourcePool[index];
+    attempts++;
+  } while (
+    recentQuestions.includes(question.correctAnswer + question.imageUri) &&
+    attempts < 20
+  );
+  const key = question.correctAnswer + question.imageUri;
+  recentQuestions.push(key);
+  if (recentQuestions.length > 3) recentQuestions.shift();
 
   quizImage.src = question.imageUri;
   quizButtons.innerHTML = '';
 
   const answers = [question.correctAnswer];
   const questions = JSON.parse(localStorage.getItem('questions') || '[]');
-  const dummyAnswers = questions.filter(q => q.correctAnswer !== question.correctAnswer).map(q => q.correctAnswer);
 
+  const keywords = question.correctAnswer.toLowerCase().split(/\s+/);
+  const scored = questions
+    .filter(q => q.correctAnswer !== question.correctAnswer)
+    .map(q => {
+      const otherWords = q.correctAnswer.toLowerCase().split(/\s+/);
+      const matchScore = keywords.reduce(
+        (score, word) => score + (otherWords.includes(word) ? 1 : 0),
+        0
+      );
+      return { answer: q.correctAnswer, score: matchScore };
+    })
+    .sort((a, b) => b.score - a.score || a.answer.localeCompare(b.answer));
+
+  const dummyAnswers = scored.slice(0, 10).map(s => s.answer);
   while (answers.length < 4 && dummyAnswers.length) {
     const i = Math.floor(Math.random() * dummyAnswers.length);
     answers.push(dummyAnswers.splice(i, 1)[0]);
   }
+
   answers.sort(() => Math.random() - 0.5);
 
   answers.forEach(answer => {
     const btn = document.createElement('button');
     btn.textContent = answer;
-  btn.addEventListener('click', () => {
-  const isCorrect = answer === question.correctAnswer;
+    btn.addEventListener('click', () => {
+      const isCorrect = answer === question.correctAnswer;
+      btn.style.backgroundColor = isCorrect ? 'green' : 'red';
+      Array.from(quizButtons.children).forEach(b => {
+        if (b.textContent === question.correctAnswer) b.style.backgroundColor = 'green';
+        if (b !== btn) b.disabled = true;
+      });
 
-  btn.style.backgroundColor = isCorrect ? 'green' : 'red';
-  Array.from(quizButtons.children).forEach(b => {
-    if (b.textContent === question.correctAnswer) b.style.backgroundColor = 'green';
-    if (b !== btn) b.disabled = true;
-  });
+      if (isCorrect) {
+        question.correctStreak = (question.correctStreak || 0) + 1;
+        question.incorrectStreak = 0;
+        if (question.correctStreak > 3) question.correctStreak = 3;
+      } else {
+        question.correctStreak = 0;
+        question.incorrectStreak = (question.incorrectStreak || 0) + 1;
+        if (question.incorrectStreak > 2) question.incorrectStreak = 2;
+      }
 
-  if (isCorrect) {
-    question.correctStreak = (question.correctStreak || 0) + 1;
-    question.incorrectStreak = 0;
-    if (question.correctStreak > 3) question.correctStreak = 3;
-  } else {
-    question.correctStreak = 0;
-    question.incorrectStreak = (question.incorrectStreak || 0) + 1;
-    if (question.incorrectStreak > 2) question.incorrectStreak = 2;
-  }
+      const inPriority = priorityPool.indexOf(question);
+      const inMastered = masteredPool.indexOf(question);
 
-  const inPriority = priorityPool.indexOf(question);
-  const inMastered = masteredPool.indexOf(question);
+      if (question.correctStreak >= 3 && inPriority !== -1) {
+        priorityPool.splice(inPriority, 1);
+        masteredPool.push(question);
+      } else if (question.incorrectStreak >= 2 && inMastered !== -1) {
+        masteredPool.splice(inMastered, 1);
+        priorityPool.push(question);
+      }
 
-  if (question.correctStreak >= 3 && inPriority !== -1) {
-    priorityPool.splice(inPriority, 1);
-    masteredPool.push(question);
-  } else if (question.incorrectStreak >= 2 && inMastered !== -1) {
-    masteredPool.splice(inMastered, 1);
-    priorityPool.push(question);
-  }
+      const all = JSON.parse(localStorage.getItem('questions') || '[]');
+      const updated = all.map(q =>
+        q.correctAnswer === question.correctAnswer && q.imageUri === question.imageUri
+          ? question
+          : q
+      );
+      localStorage.setItem('questions', JSON.stringify(updated));
 
-  const all = JSON.parse(localStorage.getItem('questions') || '[]');
-  const updated = all.map(q =>
-    q.correctAnswer === question.correctAnswer && q.imageUri === question.imageUri
-      ? question
-      : q
-  );
-  localStorage.setItem('questions', JSON.stringify(updated));
-
-  setTimeout(showNextQuiz, 1000);
-});
-  
-   quizButtons.appendChild(btn);
+      setTimeout(showNextQuiz, 1000);
     });
-    
-    
-  };
-}
+      
+    quizButtons.appendChild(btn);
+  });
+};
 
 // Navigation and event bindings
 goToCategoryBtn.addEventListener('click', () => {
@@ -381,7 +405,7 @@ saveQuestionBtn.addEventListener('click', () => {
   showToast('Question saved!');
   resetAddQuestionForm();
   loadAddCategories();
-  refreshQuestionList();
+
 });
 
 function refreshQuestionList(filter = '') {
@@ -499,5 +523,13 @@ function loadCategoryListUI() {
     div.appendChild(renameBtn);
     div.appendChild(delBtn);
     categoryListDiv.appendChild(div);
+  });
+}
+// Register the service worker for offline support
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js')
+      .then(reg => console.log('Service Worker registered:', reg))
+      .catch(err => console.error('Service Worker registration failed:', err));
   });
 }
