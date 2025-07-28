@@ -1,17 +1,4 @@
 import defaultQuestions from './default-questions.js';
-// ✅ FULL main.js (updated)
-// Load default questions on first launch
-if (!localStorage.getItem('initialized')) {
-  const script = document.createElement('script');
-  script.src = 'default-questions.js';
-  script.onload = () => {
-    if (typeof defaultQuestions !== 'undefined') {
-      localStorage.setItem('questions', JSON.stringify(defaultQuestions));
-      localStorage.setItem('initialized', 'true');
-    }
-  };
-  document.head.appendChild(script);
-}
 
 // ✅ FULL main.js (updated)
 // Screen elements
