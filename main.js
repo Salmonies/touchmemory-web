@@ -17,6 +17,7 @@ openRequest.onsuccess = function (event) {
 openRequest.onerror = function () {
   console.error("❌ Failed to open IndexedDB");
 };
+localStorage.removeItem('questions');
 function saveQuestionsToIndexedDB(questions) {
   const transaction = db.transaction(['questions'], 'readwrite');
   const store = transaction.objectStore('questions');
