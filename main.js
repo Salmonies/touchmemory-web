@@ -17,8 +17,32 @@ openRequest.onsuccess = function (event) {
 openRequest.onerror = function () {
   console.error("❌ Failed to open IndexedDB");
 };
+function saveQuestionsToIndexedDB(questions) {
+  const transaction = db.transaction(['questions'], 'readwrite');
+  const store = transaction.objectStore('questions');
 
+  questions.forEach(q => {
+    store.put(q);
+  });
 
+  transaction.oncomplete = () => {
+    console.log('✅ Questions saved to IndexedDB');
+  };
+
+  transaction.onerror = () => {
+    console.error('❌ Failed to save questions to IndexedDB');
+  };
+}
+function loadQuestionsFromIndexedDB() {
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(['questions'], 'readonly');
+    const store = transaction.objectStore('questions');
+    const request = store.getAll();
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
 
 // Screen elements
 const mainMenu = document.querySelector('.main-menu');
@@ -130,34 +154,33 @@ function collectSelectedAndStart(guestMode) {
     alert('Please select at least one category');
     return;
   }
-// <--line112--> Build quiz pools by category and streaks
-const allQuestions = JSON.parse(localStorage.getItem('questions') || '[]');
-const matching = allQuestions.filter(q => q.categories.some(cat => selected.includes(cat)));
+loadQuestionsFromIndexedDB().then(allQuestions => {
+  const matching = allQuestions.filter(q => q.categories.some(cat => selected.includes(cat)));
 
-const priorityPool = [];
-const masteredPool = [];
+  const priorityPool = [];
+  const masteredPool = [];
 
-matching.forEach(q => {
-  if (q.correctStreak >= 3) {
-    masteredPool.push(q);
-  } else {
-    priorityPool.push(q);
+  matching.forEach(q => {
+    if (q.correctStreak >= 3) {
+      masteredPool.push(q);
+    } else {
+      priorityPool.push(q);
+    }
+  });
+
+  if (priorityPool.length === 0 && masteredPool.length === 0) {
+    alert('No questions match selected categories');
+    return;
   }
-});
 
-if (priorityPool.length === 0 && masteredPool.length === 0) {
-  alert('No questions match selected categories');
-  return;
-}
+  window.priorityPool = priorityPool;
+  window.masteredPool = masteredPool;
 
-window.priorityPool = priorityPool;
-window.masteredPool = masteredPool;
-
-  
   mainMenu.classList.add('hidden');
   categoryScreen.classList.add('hidden');
   quizScreen.classList.remove('hidden');
   showNextQuiz();
+});
 
 }
 function showNextQuiz() {
@@ -254,7 +277,7 @@ function showNextQuiz() {
           ? question
           : q
       );
-      localStorage.setItem('questions', JSON.stringify(updated));
+      saveQuestionsToIndexedDB(updated);
 
       setTimeout(showNextQuiz, 1000);
     });
