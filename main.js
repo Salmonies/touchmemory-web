@@ -1,5 +1,9 @@
 import defaultQuestions from './default-questions.js';
-
+let questions = JSON.parse(localStorage.getItem('questions') || 'null');
+if (!questions || !Array.isArray(questions)) {
+  questions = defaultQuestions;
+  localStorage.setItem('questions', JSON.stringify(questions));
+}
 // ✅ FULL main.js (updated)
 // Screen elements
 
