@@ -1,49 +1,4 @@
-let db;
 
-const openRequest = indexedDB.open("TouchMemoryDB", 1);
-
-openRequest.onupgradeneeded = function (event) {
-  db = event.target.result;
-  if (!db.objectStoreNames.contains("questions")) {
-    db.createObjectStore("questions", { keyPath: "id", autoIncrement: true });
-  }
-};
-
-openRequest.onsuccess = function (event) {
-  db = event.target.result;
-  console.log("✅ IndexedDB loaded");
-};
-
-openRequest.onerror = function () {
-  console.error("❌ Failed to open IndexedDB");
-};
-
-function saveQuestionsToIndexedDB(questions) {
-  const transaction = db.transaction(['questions'], 'readwrite');
-  const store = transaction.objectStore('questions');
-
-  questions.forEach(q => {
-    store.put(q);
-  });
-
-  transaction.oncomplete = () => {
-    console.log('✅ Questions saved to IndexedDB');
-  };
-
-  transaction.onerror = () => {
-    console.error('❌ Failed to save questions to IndexedDB');
-  };
-}
-function loadQuestionsFromIndexedDB() {
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(['questions'], 'readonly');
-    const store = transaction.objectStore('questions');
-    const request = store.getAll();
-
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
-}
 
 // Screen elements
 const mainMenu = document.querySelector('.main-menu');
@@ -155,7 +110,7 @@ function collectSelectedAndStart(guestMode) {
     alert('Please select at least one category');
     return;
   }
-loadQuestionsFromIndexedDB().then(allQuestions => {
+const allQuestions = JSON.parse(localStorage.getItem('questions') || '[]');
   const matching = allQuestions.filter(q => q.categories.some(cat => selected.includes(cat)));
 
   const priorityPool = [];
@@ -181,7 +136,6 @@ loadQuestionsFromIndexedDB().then(allQuestions => {
   categoryScreen.classList.add('hidden');
   quizScreen.classList.remove('hidden');
   showNextQuiz();
-});
 
 }
 function showNextQuiz() {
@@ -278,7 +232,7 @@ function showNextQuiz() {
           ? question
           : q
       );
-      saveQuestionsToIndexedDB(updated);
+      localStorage.setItem('questions', JSON.stringify(updated));
 
       setTimeout(showNextQuiz, 1000);
     });
@@ -561,3 +515,4 @@ if ('serviceWorker' in navigator) {
       .catch(err => console.error('Service Worker registration failed:', err));
   });
 }
+
